@@ -25,6 +25,8 @@ jobs:
             --adjust-extension \
             --page-requisites \
             --no-parent \
+            --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
+            --execute robots=off \
             https://cdjbooks.com
 
           mv cdjbooks.com public
