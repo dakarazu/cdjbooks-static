@@ -59,11 +59,12 @@ jobs:
           name: github-pages
           path: public
 
-      - name: Deploy to Cloudflare Pages
-        run: |
-          npx wrangler pages deploy public \
-            --project-name=cdjbooks-static \
-            --branch=main
-        env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      - name: Deploy to Cloudflare Pages (Production)
+  run: |
+    npx wrangler pages deploy public \
+      --project-name=cdjbooks-static \
+      --branch=main \
+      --environment=production
+  env:
+    CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+    CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
