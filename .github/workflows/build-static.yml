@@ -29,14 +29,15 @@ jobs:
 
           mv cdjbooks.com public
 
-      - name: Upload artifact
+      - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v2
         with:
-          path: public
+          path: ./public
 
   deploy_github:
     needs: build
     runs-on: ubuntu-latest
+
     permissions:
       pages: write
       id-token: write
@@ -50,9 +51,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Download static artifact
         uses: actions/download-artifact@v4
         with:
@@ -60,11 +58,11 @@ jobs:
           path: public
 
       - name: Deploy to Cloudflare Pages (Production)
-  run: |
-    npx wrangler pages deploy public \
-      --project-name=cdjbooks-static \
-      --branch=main \
-      --environment=production
-  env:
-    CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-    CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          npx wrangler pages deploy public \
+            --project-name=cdjbooks-static \
+            --branch=main \
+            --environment=production
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
