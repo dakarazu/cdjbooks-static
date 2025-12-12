@@ -8,11 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     permissions:
-      pages: write
-      id-token: write
-
+      contents: read
     steps:
       - name: Install wget
         run: sudo apt-get install -y wget
@@ -29,22 +26,34 @@ jobs:
             --no-parent \
             --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
             --execute robots=off \
+            --exclude-directories=/cdn-cgi/ \
             https://cdjbooks.com
 
-      - name: Upload static site as artifact
-        id: upload
+      # Fix: Move files from subfolder to root so the site isn't at /cdjbooks.com/
+      - name: Flatten directory structure
+        run: |
+          mv public/cdjbooks.com/* public/ 2>/dev/null || true
+          rmdir public/cdjbooks.com 2>/dev/null || true
+
+      # 1. Upload for GitHub Pages (Specific Format)
+      - name: Upload for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
+          path: ./public
+
+      # 2. Upload for Cloudflare (Standard Format)
+      - name: Upload for Cloudflare
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-site-files
           path: ./public
 
   deploy_github:
     needs: build
     runs-on: ubuntu-latest
-
     permissions:
       pages: write
       id-token: write
-
     steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
@@ -52,19 +61,20 @@ jobs:
   deploy_cloudflare:
     needs: build
     runs-on: ubuntu-latest
-
     steps:
+      # Fix: Use standard download action
       - name: Download static artifact
-        uses: actions/download-pages-artifact@v3
+        uses: actions/download-artifact@v4
         with:
+          name: static-site-files
           path: public
 
-      - name: Deploy to Cloudflare Pages (Production)
+      - name: Deploy to Cloudflare Pages
         run: |
           npx wrangler pages deploy public \
             --project-name=cdjbooks-static \
             --branch=main \
-            --environment=production
+            --commit-dirty=true
         env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
