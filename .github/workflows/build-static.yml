@@ -19,7 +19,9 @@ jobs:
 
       - name: Crawl cdjbooks.com
         run: |
+          mkdir -p public
           wget \
+            --directory-prefix=public \
             --mirror \
             --convert-links \
             --adjust-extension \
@@ -28,8 +30,6 @@ jobs:
             --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
             --execute robots=off \
             https://cdjbooks.com
-
-          mv cdjbooks.com public
 
       - name: Upload static site as artifact
         id: upload
