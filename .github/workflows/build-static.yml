@@ -28,26 +28,23 @@ jobs:
             --execute robots=off \
             --exclude-directories=/cdn-cgi/ \
             --restrict-file-names=windows \
+            --reject-regex "(wp-admin|wp-login|xmlrpc|feed|comments|cart|my-account)" \
             https://cdjbooks.com
 
-      # Move files from subfolder to root and cleanup bad filenames
       - name: Organize and Cleanup
         run: |
-          # 1. Move files out of the cdjbooks.com subfolder
           mv public/cdjbooks.com/* public/ 2>/dev/null || true
           rmdir public/cdjbooks.com 2>/dev/null || true
-          
-          # 2. Delete files containing '?' or ':' which break GitHub Artifacts
           find public -name "*\?*" -delete
           find public -name "*\:*" -delete
 
-      # 1. Upload for GitHub Pages (Specific Format)
+      # 1. Upload for GitHub Pages
       - name: Upload for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
-      # 2. Upload for Cloudflare (Standard Format)
+      # 2. Upload for Cloudflare
       - name: Upload for Cloudflare
         uses: actions/upload-artifact@v4
         with:
@@ -83,3 +80,8 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      # Optional: Simple Success Message (Point #6)
+      - name: Echo Success
+        if: success()
+        run: echo "🚀 Site deployed successfully to Cloudflare!"
