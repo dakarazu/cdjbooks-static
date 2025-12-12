@@ -27,13 +27,19 @@ jobs:
             --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
             --execute robots=off \
             --exclude-directories=/cdn-cgi/ \
+            --restrict-file-names=windows \
             https://cdjbooks.com
 
-      # Fix: Move files from subfolder to root so the site isn't at /cdjbooks.com/
-      - name: Flatten directory structure
+      # Move files from subfolder to root and cleanup bad filenames
+      - name: Organize and Cleanup
         run: |
+          # 1. Move files out of the cdjbooks.com subfolder
           mv public/cdjbooks.com/* public/ 2>/dev/null || true
           rmdir public/cdjbooks.com 2>/dev/null || true
+          
+          # 2. Delete files containing '?' or ':' which break GitHub Artifacts
+          find public -name "*\?*" -delete
+          find public -name "*\:*" -delete
 
       # 1. Upload for GitHub Pages (Specific Format)
       - name: Upload for GitHub Pages
@@ -62,7 +68,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      # Fix: Use standard download action
       - name: Download static artifact
         uses: actions/download-artifact@v4
         with:
